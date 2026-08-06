@@ -160,6 +160,9 @@ ScriptTextEditor::EditMenusScTE::EditMenusScTE(ScriptEditor *p_se) : EditMenusCE
 	edit_menu_fold->add_shortcut(ED_GET_SHORTCUT("script_text_editor/create_code_region"), EDIT_CREATE_CODE_REGION);
 	edit_menu_convert_indent->add_shortcut(ED_GET_SHORTCUT("script_text_editor/auto_indent"), EDIT_AUTO_INDENT);
 
+	edit_menu_convert_indent->add_shortcut(ED_GET_SHORTCUT("script_text_editor/convert_indent_to_tabs"), EDIT_CONVERT_INDENT_TO_TABS);
+	edit_menu_convert_indent->add_shortcut(ED_GET_SHORTCUT("script_text_editor/convert_indent_to_spaces"), EDIT_CONVERT_INDENT_TO_SPACES);
+
 	search_menu->get_popup()->add_separator();
 	search_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/show_tooltip"), SHOW_TOOLTIP_AT_CARET);
 	search_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/contextual_help"), HELP_CONTEXTUAL);
@@ -1692,6 +1695,8 @@ bool ScriptTextEditor::_edit_option(int p_op) {
 
 	switch (p_op) {
 		case EDIT_AUTO_INDENT:
+		case EDIT_CONVERT_INDENT_TO_SPACES:
+		case EDIT_CONVERT_INDENT_TO_TABS:
 		case EDIT_EVALUATE:
 		case EDIT_CREATE_CODE_REGION:
 		case SHOW_TOOLTIP_AT_CARET:
@@ -1713,42 +1718,13 @@ bool ScriptTextEditor::_edit_option(int p_op) {
 			tx->request_code_completion(true);
 		} break;
 		case EDIT_AUTO_INDENT: {
-			String text = tx->get_text();
-			Ref<Script> scr = edited_res;
-			if (scr.is_null()) {
-				return true;
-			}
-
-			tx->begin_complex_operation();
-			tx->begin_multicaret_edit();
-			int begin = tx->get_line_count() - 1, end = 0;
-			if (tx->has_selection()) {
-				// Auto indent all lines that have a caret or selection on it.
-				Vector<Point2i> line_ranges = tx->get_line_ranges_from_carets();
-				for (Point2i line_range : line_ranges) {
-					scr->get_language()->auto_indent_code(text, line_range.x, line_range.y);
-					if (line_range.x < begin) {
-						begin = line_range.x;
-					}
-					if (line_range.y > end) {
-						end = line_range.y;
-					}
-				}
-			} else {
-				// Auto indent entire text.
-				begin = 0;
-				end = tx->get_line_count() - 1;
-				scr->get_language()->auto_indent_code(text, begin, end);
-			}
-
-			// Apply auto indented code.
-			Vector<String> lines = text.split("\n");
-			for (int i = begin; i <= end; ++i) {
-				tx->set_line(i, lines[i]);
-			}
-
-			tx->end_multicaret_edit();
-			tx->end_complex_operation();
+			_edit_option_auto_indent();
+		} break;
+		case EDIT_CONVERT_INDENT_TO_SPACES: {
+			_edit_option_auto_indent();
+		} break;
+		case EDIT_CONVERT_INDENT_TO_TABS: {
+			_edit_option_auto_indent();
 		} break;
 		case EDIT_PICK_COLOR: {
 			color_panel->popup();
@@ -1812,6 +1788,46 @@ bool ScriptTextEditor::_edit_option(int p_op) {
 		}
 	}
 	return true;
+}
+
+void ScriptTextEditor::_edit_option_auto_indent() {
+	CodeEdit *tx = code_editor->get_text_editor();
+	String text = tx->get_text();
+	Ref<Script> scr = edited_res;
+	if (scr.is_null()) {
+		return;
+	}
+
+	tx->begin_complex_operation();
+	tx->begin_multicaret_edit();
+	int begin = tx->get_line_count() - 1, end = 0;
+	if (tx->has_selection()) {
+		// Auto indent all lines that have a caret or selection on it.
+		Vector<Point2i> line_ranges = tx->get_line_ranges_from_carets();
+		for (Point2i line_range : line_ranges) {
+			scr->get_language()->auto_indent_code(text, line_range.x, line_range.y);
+			if (line_range.x < begin) {
+				begin = line_range.x;
+			}
+			if (line_range.y > end) {
+				end = line_range.y;
+			}
+		}
+	} else {
+		// Auto indent entire text.
+		begin = 0;
+		end = tx->get_line_count() - 1;
+		scr->get_language()->auto_indent_code(text, begin, end);
+	}
+
+	// Apply auto indented code.
+	Vector<String> lines = text.split("\n");
+	for (int i = begin; i <= end; ++i) {
+		tx->set_line(i, lines[i]);
+	}
+
+	tx->end_multicaret_edit();
+	tx->end_complex_operation();
 }
 
 void ScriptTextEditor::_edit_option_toggle_inline_comment() {

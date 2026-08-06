@@ -235,8 +235,6 @@ TextEditorBase::EditMenus::EditMenus(ScriptEditor *p_se) {
 	edit_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/trim_final_newlines"), EDIT_TRIM_FINAL_NEWLINES);
 	{
 		edit_menu_convert_indent = memnew(PopupMenu);
-		edit_menu_convert_indent->add_shortcut(ED_GET_SHORTCUT("script_text_editor/convert_indent_to_spaces"), EDIT_CONVERT_INDENT_TO_SPACES);
-		edit_menu_convert_indent->add_shortcut(ED_GET_SHORTCUT("script_text_editor/convert_indent_to_tabs"), EDIT_CONVERT_INDENT_TO_TABS);
 		edit_menu_convert_indent->connect(SceneStringName(id_pressed), callable_mp(this, &EditMenus::_edit_option));
 		edit_menu->get_popup()->add_submenu_node_item(TTRC("Indentation"), edit_menu_convert_indent);
 	}
@@ -403,8 +401,6 @@ bool TextEditorBase::_edit_option(int p_op) {
 		case EDIT_SELECT_ALL:
 		case EDIT_TRIM_TRAILING_WHITESAPCE:
 		case EDIT_TRIM_FINAL_NEWLINES:
-		case EDIT_CONVERT_INDENT_TO_SPACES:
-		case EDIT_CONVERT_INDENT_TO_TABS:
 		case EDIT_MOVE_LINE_UP:
 		case EDIT_MOVE_LINE_DOWN:
 		case EDIT_INDENT:
@@ -479,14 +475,6 @@ bool TextEditorBase::_edit_option(int p_op) {
 		} break;
 		case EDIT_TRIM_FINAL_NEWLINES: {
 			trim_final_newlines();
-		} break;
-		case EDIT_CONVERT_INDENT_TO_SPACES: {
-			code_editor->set_indent_using_spaces(true);
-			convert_indent();
-		} break;
-		case EDIT_CONVERT_INDENT_TO_TABS: {
-			code_editor->set_indent_using_spaces(false);
-			convert_indent();
 		} break;
 		case EDIT_TO_UPPERCASE: {
 			_convert_case(CodeTextEditor::UPPER);

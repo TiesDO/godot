@@ -114,6 +114,9 @@ class ScriptTextEditor : public CodeEditorBase {
 		SHOW_TOOLTIP_AT_CARET,
 		HELP_CONTEXTUAL,
 		LOOKUP_SYMBOL,
+
+		EDIT_CONVERT_INDENT_TO_SPACES,
+		EDIT_CONVERT_INDENT_TO_TABS
 	};
 
 	enum COLOR_MODE {
@@ -183,6 +186,7 @@ protected:
 
 	void _notification(int p_what);
 
+	void _edit_option_auto_indent();
 	void _edit_option_toggle_inline_comment();
 	void _color_changed(const Color &p_color);
 
